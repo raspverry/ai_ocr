@@ -15,20 +15,11 @@ services:
       - ./storage:/app/storage
       - ./models:/app/models
       - ./configs:/app/configs
+      - ./logs:/app/logs
+    env_file:
+      - .env
     environment:
-      - OCR_DEBUG=False
-      - OCR_API_HOST=0.0.0.0
-      - OCR_API_PORT=8000
-      - OCR_REDIS_URL=redis://redis:6379/0
-      - OCR_QUEUE_NAME=ocr_tasks
-      - OCR_STORAGE_TYPE=local
-      - OCR_STORAGE_PATH=/app/storage
-      # 아래 API 키는 환경에 맞게 설정
-      #- GOOGLE_APPLICATION_CREDENTIALS=/app/configs/google_credentials.json
-      #- AZURE_FORM_KEY=your_azure_form_key
-      #- AZURE_FORM_ENDPOINT=your_azure_form_endpoint
-      #- OPENAI_API_KEY=your_openai_api_key
-      #- ANTHROPIC_API_KEY=your_anthropic_api_key
+      - PYTHONUNBUFFERED=1
     depends_on:
       - redis
 
@@ -44,19 +35,11 @@ services:
       - ./storage:/app/storage
       - ./models:/app/models
       - ./configs:/app/configs
+      - ./logs:/app/logs
+    env_file:
+      - .env
     environment:
-      - OCR_DEBUG=False
-      - OCR_REDIS_URL=redis://redis:6379/0
-      - OCR_QUEUE_NAME=ocr_tasks
-      - OCR_STORAGE_TYPE=local
-      - OCR_STORAGE_PATH=/app/storage
-      - OCR_MAX_WORKERS=4
-      # 아래 API 키는 환경에 맞게 설정
-      #- GOOGLE_APPLICATION_CREDENTIALS=/app/configs/google_credentials.json
-      #- AZURE_FORM_KEY=your_azure_form_key
-      #- AZURE_FORM_ENDPOINT=your_azure_form_endpoint
-      #- OPENAI_API_KEY=your_openai_api_key
-      #- ANTHROPIC_API_KEY=your_anthropic_api_key
+      - PYTHONUNBUFFERED=1
     depends_on:
       - redis
 
