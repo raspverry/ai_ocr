@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  # 웹 애플리케이션 서비스
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: ocr-service:latest
+    container_name: ocr-web
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./storage:/app/storage
+      - ./models:/app/models
+      - ./configs:/app/configs
+    environment:
+      - OCR_DEBUG=False
+      - OCR_API_HOST=0.0.0.0
+      - OCR_API_PORT=8000
+      - OCR_REDIS_URL=redis://redis:6379/0
+      - OCR_QUEUE_NAME=ocr_tasks
+      - OCR_STORAGE_TYPE=local
+      - OCR_STORAGE_PATH=/app/storage
+      # 아래 API 키는 환경에 맞게 설정
+      #- GOOGLE_APPLICATION_CREDENTIALS=/app/configs/google_credentials.json
+      #- AZURE_FORM_KEY=your_azure_form_key
+      #- AZURE_FORM_ENDPOINT=your_azure_form_endpoint
+      #- OPENAI_API_KEY=your_openai_api_key
+      #- ANTHROPIC_API_KEY=your_anthropic_api_key
+    depends_on:
+      - redis
+
+  # 작업자 서비스 (OCR 처리)
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.worker
+    image: ocr-service-worker:latest
+    container_name: ocr-worker
+    restart: unless-stopped
+    volumes:
+      - ./storage:/app/storage
+      - ./models:/app/models
+      - ./configs:/app/configs
+    environment:
+      - OCR_DEBUG=False
+      - OCR_REDIS_URL=redis://redis:6379/0
+      - OCR_QUEUE_NAME=ocr_tasks
+      - OCR_STORAGE_TYPE=local
+      - OCR_STORAGE_PATH=/app/storage
+      - OCR_MAX_WORKERS=4
+      # 아래 API 키는 환경에 맞게 설정
+      #- GOOGLE_APPLICATION_CREDENTIALS=/app/configs/google_credentials.json
+      #- AZURE_FORM_KEY=your_azure_form_key
+      #- AZURE_FORM_ENDPOINT=your_azure_form_endpoint
+      #- OPENAI_API_KEY=your_openai_api_key
+      #- ANTHROPIC_API_KEY=your_anthropic_api_key
+    depends_on:
+      - redis
+
+  # Redis 서비스 (작업 큐와 캐시)
+  redis:
+    image: redis:6-alpine
+    container_name: ocr-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+
+volumes:
+  redis-data:
