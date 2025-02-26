@@ -1,3 +1,4 @@
+```
 ocr-service/
 ├── src/
 │   ├── api/
@@ -82,3 +83,5 @@ ocr-service/
 ├── Dockerfile                   # 메인 Dockerfile
 ├── main.py                      # 애플리케이션 진입점
 └── README.md                    # 문서
+
+```
