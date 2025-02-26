@@ -1,0 +1,56 @@
+FROM python:3.12-slim
+
+# 타임존 설정
+ENV TZ=Asia/Tokyo
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# 필수 시스템 패키지 설치
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    tesseract-ocr \
+    libtesseract-dev \
+    tesseract-ocr-jpn \
+    tesseract-ocr-kor \
+    tesseract-ocr-chi-sim \
+    tesseract-ocr-chi-tra \
+    libleptonica-dev \
+    pkg-config \
+    mecab \
+    libmecab-dev \
+    mecab-ipadic-utf8 \
+    unzip \
+    wget \
+    curl \
+    git \
+    poppler-utils \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# MeCab 일본어 NEologd 사전 설치
+RUN git clone --depth 1 https://github.com/neologd/mecab-ipadic-neologd.git /tmp/mecab-ipadic-neologd \
+    && cd /tmp/mecab-ipadic-neologd \
+    && ./bin/install-mecab-ipadic-neologd -n -y \
+    && rm -rf /tmp/mecab-ipadic-neologd
+
+# 작업 디렉토리 생성
+WORKDIR /app
+
+# 애플리케이션 의존성 설치
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# 모델 디렉토리 생성
+RUN mkdir -p /app/models /app/storage /app/configs
+
+# 애플리케이션 코드 복사
+COPY src /app/src
+COPY scripts /app/scripts
+COPY configs /app/configs
+
+# 모델 다운로드 스크립트 실행 (필요에 따라 주석 해제)
+# RUN python -m scripts.download_models
+
+# 작업자 실행
+CMD ["python", "-m", "src.worker.start"]
