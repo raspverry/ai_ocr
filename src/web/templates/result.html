@@ -1,0 +1,406 @@
+{% extends "layout.html" %}
+
+{% block title %}초고정밀 OCR 시스템 - 결과{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-container {
+        padding: 15px;
+        margin-bottom: 20px;
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+    }
+    .page-header {
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        margin-bottom: 15px;
+    }
+    .text-area {
+        font-family: 'Noto Sans KR', 'Noto Sans JP', sans-serif;
+        line-height: 1.6;
+        white-space: pre-wrap;
+    }
+    .confidence-badge {
+        font-size: 0.85em;
+    }
+    .highlight-area {
+        background-color: rgba(255, 255, 0, 0.2);
+        border-radius: 3px;
+        padding: 2px 4px;
+    }
+    .special-item {
+        border: 1px dashed #6c757d;
+        padding: 2px 5px;
+        margin: 2px;
+        border-radius: 3px;
+        display: inline-block;
+    }
+    .loading-spinner {
+        display: inline-block;
+        width: 2rem;
+        height: 2rem;
+        vertical-align: middle;
+    }
+    .processing {
+        animation: processingPulse 2s infinite;
+    }
+    @keyframes processingPulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.6; }
+        100% { opacity: 1; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 offset-lg-1">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center 
+                {% if status == 'completed' %}bg-success text-white
+                {% elif status == 'failed' %}bg-danger text-white
+                {% else %}bg-info text-white{% endif %}">
+                <h3 class="mb-0">
+                    {% if status == 'completed' %}
+                        <i class="fas fa-check-circle me-2"></i> OCR 처리 완료
+                    {% elif status == 'failed' %}
+                        <i class="fas fa-exclamation-circle me-2"></i> OCR 처리 실패
+                    {% else %}
+                        <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">로딩중...</span>
+                        </div>
+                        OCR 처리 중...
+                    {% endif %}
+                </h3>
+                
+                <div>
+                    {% if status == 'completed' %}
+                        <a href="/extraction/{{ task_id }}" class="btn btn-light btn-sm">
+                            <i class="fas fa-file-invoice"></i> 데이터 추출
+                        </a>
+                    {% endif %}
+                    <a href="/upload" class="btn btn-light btn-sm">
+                        <i class="fas fa-upload"></i> 새 문서 업로드
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                {% if status == 'completed' %}
+                    <div class="alert alert-light mb-4">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>파일명:</strong> {{ result.file_name }}
+                            </div>
+                            <div class="col-md-2">
+                                <strong>언어:</strong> 
+                                {% if result.language == 'jpn' %}일본어
+                                {% elif result.language == 'kor' %}한국어
+                                {% elif result.language == 'eng' %}영어
+                                {% elif result.language == 'chi_sim' %}중국어 간체
+                                {% elif result.language == 'chi_tra' %}중국어 번체
+                                {% else %}{{ result.language }}{% endif %}
+                            </div>
+                            <div class="col-md-3">
+                                <strong>신뢰도:</strong> 
+                                <span class="badge {% if result.confidence > 0.9 %}bg-success
+                                      {% elif result.confidence > 0.7 %}bg-primary
+                                      {% elif result.confidence > 0.5 %}bg-warning
+                                      {% else %}bg-danger{% endif %}">
+                                    {{ (result.confidence * 100) | round(1) }}%
+                                </span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>처리 시간:</strong> {{ result.process_time | round(2) }}초
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 탭 내비게이션 -->
+                    <ul class="nav nav-tabs mb-4" id="resultTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="text-tab" data-bs-toggle="tab"
+                                   data-bs-target="#text" type="button" role="tab">
+                                <i class="fas fa-file-alt me-1"></i> 전체 텍스트
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="pages-tab" data-bs-toggle="tab"
+                                   data-bs-target="#pages" type="button" role="tab">
+                                <i class="fas fa-copy me-1"></i> 페이지별 보기
+                            </button>
+                        </li>
+                        {% if result.entities %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="entities-tab" data-bs-toggle="tab"
+                                   data-bs-target="#entities" type="button" role="tab">
+                                <i class="fas fa-tags me-1"></i> 엔티티
+                            </button>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    
+                    <!-- 탭 콘텐츠 -->
+                    <div class="tab-content" id="resultTabContent">
+                        <!-- 전체 텍스트 탭 -->
+                        <div class="tab-pane fade show active" id="text" role="tabpanel">
+                            <div class="card">
+                                <div class="card-body text-area">
+                                    {{ result.text }}
+                                </div>
+                                <div class="card-footer text-end">
+                                    <button class="btn btn-sm btn-outline-secondary" 
+                                           onclick="copyToClipboard('{{ result.text }}')">
+                                        <i class="fas fa-copy"></i> 복사
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 페이지별 보기 탭 -->
+                        <div class="tab-pane fade" id="pages" role="tabpanel">
+                            {% for page in result.pages %}
+                            <div class="page-container" id="page-{{ page.page_num }}">
+                                <div class="page-header d-flex justify-content-between align-items-center">
+                                    <h5 class="mb-0">페이지 {{ page.page_num }}
+                                        <span class="badge confidence-badge {% if page.confidence > 0.9 %}bg-success
+                                              {% elif page.confidence > 0.7 %}bg-primary
+                                              {% elif page.confidence > 0.5 %}bg-warning
+                                              {% else %}bg-danger{% endif %}">
+                                            신뢰도: {{ (page.confidence * 100) | round(1) }}%
+                                        </span>
+                                        
+                                        {% if page.orientation != 0 %}
+                                        <span class="badge bg-info confidence-badge">
+                                            {% if page.orientation == 90 %}시계방향 90도 회전 보정
+                                            {% elif page.orientation == 180 %}180도 회전 보정
+                                            {% elif page.orientation == 270 %}반시계방향 90도 회전 보정
+                                            {% endif %}
+                                        </span>
+                                        {% endif %}
+                                    </h5>
+                                    <button class="btn btn-sm btn-outline-secondary" 
+                                           onclick="copyToClipboard('{{ page.text }}')">
+                                        <i class="fas fa-copy"></i> 복사
+                                    </button>
+                                </div>
+                                
+                                {% if page.special_items %}
+                                <div class="mb-3">
+                                    {% if page.special_items.has_stamps %}
+                                    <span class="special-item"><i class="fas fa-stamp"></i> 도장</span>
+                                    {% endif %}
+                                    
+                                    {% if page.special_items.has_handwriting %}
+                                    <span class="special-item"><i class="fas fa-pen-nib"></i> 손글씨</span>
+                                    {% endif %}
+                                    
+                                    {% if page.special_items.has_table %}
+                                    <span class="special-item"><i class="fas fa-table"></i> 표</span>
+                                    {% endif %}
+                                    
+                                    {% if page.special_items.has_strikethrough %}
+                                    <span class="special-item"><i class="fas fa-strikethrough"></i> 취소선</span>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                                
+                                <div class="text-area">{{ page.text }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <!-- 엔티티 탭 -->
+                        {% if result.entities %}
+                        <div class="tab-pane fade" id="entities" role="tabpanel">
+                            <div class="row">
+                                {% if result.entities.companies %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-building me-2"></i> 회사명</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="list-group">
+                                                {% for company in result.entities.companies %}
+                                                <li class="list-group-item">{{ company }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if result.entities.dates %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i> 날짜</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="list-group">
+                                                {% for date in result.entities.dates %}
+                                                <li class="list-group-item">{{ date }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if result.entities.amounts %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-yen-sign me-2"></i> 금액</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="list-group">
+                                                {% for amount in result.entities.amounts %}
+                                                <li class="list-group-item">{{ amount }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if result.entities.persons %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-user me-2"></i> 인명</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="list-group">
+                                                {% for person in result.entities.persons %}
+                                                <li class="list-group-item">{{ person }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if result.entities.addresses %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i> 주소</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="list-group">
+                                                {% for address in result.entities.addresses %}
+                                                <li class="list-group-item">{{ address }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if result.entities.emails %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-envelope me-2"></i> 이메일</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="list-group">
+                                                {% for email in result.entities.emails %}
+                                                <li class="list-group-item">{{ email }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if result.entities.phones %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <h5 class="mb-0"><i class="fas fa-phone me-2"></i> 전화번호</h5>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="list-group">
+                                                {% for phone in result.entities.phones %}
+                                                <li class="list-group-item">{{ phone }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                {% elif status == 'failed' %}
+                    <div class="alert alert-danger">
+                        <h5 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i> 처리 오류 발생</h5>
+                        <p>{{ error }}</p>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <a href="/upload" class="btn btn-primary">
+                            <i class="fas fa-upload me-2"></i> 다시 업로드
+                        </a>
+                    </div>
+                {% else %}
+                    <!-- 처리 중인 경우 -->
+                    <div class="text-center processing py-5">
+                        <div class="spinner-border text-primary loading-spinner mb-3" role="status">
+                            <span class="visually-hidden">처리 중...</span>
+                        </div>
+                        <h4 class="mb-3">OCR 처리 중입니다...</h4>
+                        <p class="text-muted">문서 크기와 복잡도에 따라 몇 분이 소요될 수 있습니다.</p>
+                        
+                        <div class="progress mb-4" style="height: 10px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                        </div>
+                        
+                        <p>이 페이지는 자동으로 새로고침됩니다.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function copyToClipboard(text) {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        
+        // 복사 성공 알림
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-success alert-dismissible fade show position-fixed bottom-0 end-0 m-3';
+        alert.innerHTML = `
+            <i class="fas fa-check-circle me-2"></i> 클립보드에 복사되었습니다.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        `;
+        document.body.appendChild(alert);
+        
+        // 3초 후 알림 자동 삭제
+        setTimeout(() => {
+            alert.remove();
+        }, 3000);
+    }
+    
+    // 처리 중인 경우 주기적으로 새로고침
+    {% if status == 'processing' %}
+    setTimeout(function() {
+        window.location.reload();
+    }, 5000); // 5초마다 새로고침
+    {% endif %}
+</script>
+{% endblock %}
