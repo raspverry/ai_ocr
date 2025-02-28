@@ -1,0 +1,116 @@
+{% extends "layout.html" %}
+
+{% block title %}초고정밀 OCR 시스템 - 홈{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3 text-center mb-5">
+        <h1 class="display-4 mb-4">초고정밀 멀티랭귀지 OCR 시스템</h1>
+        <p class="lead">
+            일본 비즈니스 문서를 위한 초정밀 OCR 시스템으로, 다양한 OCR 엔진을 앙상블하여 99.5% 이상의 정확도를 제공합니다.
+        </p>
+        <div class="d-grid gap-2 d-md-block mt-4">
+            <a href="/upload" class="btn btn-primary btn-lg">
+                <i class="fas fa-upload me-2"></i> 문서 업로드
+            </a>
+            <a href="/documents" class="btn btn-outline-secondary btn-lg ms-md-2">
+                <i class="fas fa-file-alt me-2"></i> 문서 보기
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-12">
+        <h2 class="text-center mb-4">주요 기능</h2>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-language fa-3x text-primary mb-3"></i>
+                <h3 class="card-title">다국어 지원</h3>
+                <p class="card-text">일본어, 한국어, 영어, 중국어(간체/번체) 등 다양한 언어를 지원합니다.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-sync-alt fa-3x text-primary mb-3"></i>
+                <h3 class="card-title">자동 방향 보정</h3>
+                <p class="card-text">기울어지거나 회전된 페이지를 자동으로 감지하고 보정합니다.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-align-center fa-3x text-primary mb-3"></i>
+                <h3 class="card-title">고정확도 OCR</h3>
+                <p class="card-text">여러 OCR 엔진 앙상블로 최고 수준의 정확도를 제공합니다.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-stamp fa-3x text-primary mb-3"></i>
+                <h3 class="card-title">특수 항목 인식</h3>
+                <p class="card-text">도장, 손글씨, 수정된 텍스트 등 특수 항목을 인식합니다.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-brain fa-3x text-primary mb-3"></i>
+                <h3 class="card-title">LLM 기반 추출</h3>
+                <p class="card-text">설정 가능한 필드를 LLM을 활용하여 자동으로 추출합니다.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <i class="fas fa-file-export fa-3x text-primary mb-3"></i>
+                <h3 class="card-title">CSV 내보내기</h3>
+                <p class="card-text">추출된 데이터를 CSV 형식으로 손쉽게 내보낼 수 있습니다.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-12">
+        <h2 class="text-center mb-4">시스템 아키텍처</h2>
+        <div class="text-center">
+            <img src="{{ url_for('static', path='/images/architecture.png') }}" alt="시스템 아키텍처" class="img-fluid border rounded shadow p-2 mb-3" style="max-width: 800px;">
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-md-8 offset-md-2">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="card-title mb-0">시작하기</h3>
+            </div>
+            <div class="card-body">
+                <ol class="mb-0">
+                    <li class="mb-2"><strong>문서 업로드</strong> - "문서 업로드" 버튼을 클릭하여 PDF 또는 이미지 파일을 업로드합니다.</li>
+                    <li class="mb-2"><strong>처리 대기</strong> - OCR 처리가 완료될 때까지 대기합니다. 처리 상태를 실시간으로 확인할 수 있습니다.</li>
+                    <li class="mb-2"><strong>결과 확인</strong> - 처리 완료 후 텍스트 추출 결과를 확인합니다.</li>
+                    <li class="mb-2"><strong>필드 추출</strong> - "데이터 추출" 탭에서 추출된 key-value 데이터를 확인하고 편집합니다.</li>
+                    <li><strong>CSV 내보내기</strong> - "내보내기" 버튼으로 추출 데이터를 CSV로 저장합니다.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
