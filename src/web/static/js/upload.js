@@ -97,3 +97,105 @@ function initializeUploader() {
       // 결과 페이지로 리다이렉트
       setTimeout(function() {
         window.location.href = '/result/' + taskId;
+      }, 1000);
+    });
+    
+    // 업로드 폼 제출 처리
+    if (uploadForm) {
+      uploadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (myDropzone.files.length === 0) {
+          showAlert("파일을 선택해주세요.", "warning");
+          return;
+        }
+        
+        // 폼 데이터 추가
+        const language = document.getElementById('language') ? document.getElementById('language').value : '';
+        const extractEntities = document.getElementById('extract_entities') ? document.getElementById('extract_entities').checked : true;
+        
+        // Dropzone 폼 데이터 설정
+        myDropzone.files.forEach(function(file) {
+          file.formData = {
+            language: language,
+            extract_entities: extractEntities
+          };
+        });
+        
+        // 진행 상태 영역 표시
+        if (progressArea) {
+          progressArea.classList.remove('d-none');
+        }
+        if (progressBar) {
+          progressBar.style.width = '10%';
+        }
+        if (statusMessage) {
+          statusMessage.textContent = '파일 업로드 중...';
+        }
+        
+        // 파일 업로드 시작
+        myDropzone.processQueue();
+      });
+    }
+    
+    // 취소 버튼 처리
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', function() {
+        myDropzone.removeAllFiles(true);
+        if (progressArea) {
+          progressArea.classList.add('d-none');
+        }
+        if (uploadBtn) {
+          uploadBtn.disabled = true;
+        }
+      });
+    }
+  }
+}
+
+// 파일 유형에 따른 아이콘 반환
+function getFileTypeIcon(mimeType, fileName) {
+  // 파일 확장자 추출
+  const extension = fileName.split('.').pop().toLowerCase();
+  
+  // MIME 타입 및 확장자에 따른 아이콘 선택
+  if (mimeType.startsWith('image/') || ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'tiff', 'tif'].includes(extension)) {
+    return 'fas fa-file-image text-primary';
+  } else if (mimeType === 'application/pdf' || extension === 'pdf') {
+    return 'fas fa-file-pdf text-danger';
+  } else {
+    return 'fas fa-file text-secondary';
+  }
+}
+
+// 페이지 로드 시 업로더 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  initializeUploader();
+  
+  // 언어 선택 변경 시 언어 힌트 표시
+  const languageSelect = document.getElementById('language');
+  const languageHint = document.getElementById('language-hint');
+  
+  if (languageSelect && languageHint) {
+    languageSelect.addEventListener('change', function() {
+      const selectedLang = languageSelect.value;
+      
+      // 언어별 힌트 표시
+      if (selectedLang === 'jpn') {
+        languageHint.textContent = '일본어 문서에 최적화된 인식을 적용합니다.';
+      } else if (selectedLang === 'kor') {
+        languageHint.textContent = '한국어 문서에 최적화된 인식을 적용합니다.';
+      } else if (selectedLang === 'eng') {
+        languageHint.textContent = '영어 문서에 최적화된 인식을 적용합니다.';
+      } else if (selectedLang === 'chi_sim') {
+        languageHint.textContent = '중국어 간체 문서에 최적화된 인식을 적용합니다.';
+      } else if (selectedLang === 'chi_tra') {
+        languageHint.textContent = '중국어 번체 문서에 최적화된 인식을 적용합니다.';
+      } else {
+        languageHint.textContent = '자동으로 언어를 감지합니다.';
+      }
+      
+      languageHint.style.display = 'block';
+    });
+  }
+});
