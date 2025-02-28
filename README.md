@@ -15,7 +15,7 @@
 
 ## 시스템 아키텍처
 
-![시스템 아키텍처](./docs/images/architecture.png)
+![시스템 아키텍처](system_architecture.svg)
 
 ## 시스템 요구사항
 
