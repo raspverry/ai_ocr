@@ -1,0 +1,432 @@
+{% extends "layout.html" %}
+
+{% block title %}초고정밀 OCR 시스템 - 설정{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.0/jsoneditor.min.css">
+<style>
+    .editor-container {
+        height: 500px;
+        margin-bottom: 20px;
+    }
+    .jsoneditor-poweredBy {
+        display: none;
+    }
+    .section-title {
+        border-bottom: 2px solid #0d6efd;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .engine-card {
+        transition: all 0.3s;
+    }
+    .engine-card.disabled {
+        opacity: 0.6;
+    }
+    .engine-card .form-check {
+        margin-bottom: 0;
+    }
+    .form-range-value {
+        width: 3rem;
+        text-align: center;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-10 offset-lg-1">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">설정</h3>
+            </div>
+            <div class="card-body">
+                <!-- 탭 내비게이션 -->
+                <ul class="nav nav-tabs mb-4" id="settingsTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="extraction-tab" data-bs-toggle="tab"
+                               data-bs-target="#extraction" type="button" role="tab">
+                            <i class="fas fa-file-invoice me-1"></i> 추출 필드 설정
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="ocr-tab" data-bs-toggle="tab"
+                               data-bs-target="#ocr" type="button" role="tab">
+                            <i class="fas fa-cogs me-1"></i> OCR 엔진 설정
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="processing-tab" data-bs-toggle="tab"
+                               data-bs-target="#processing" type="button" role="tab">
+                            <i class="fas fa-sliders-h me-1"></i> 처리 옵션
+                        </button>
+                    </li>
+                </ul>
+                
+                <!-- 탭 콘텐츠 -->
+                <form action="/settings" method="post" id="settings-form">
+                    <div class="tab-content" id="settingsTabContent">
+                        <!-- 추출 필드 설정 탭 -->
+                        <div class="tab-pane fade show active" id="extraction" role="tabpanel">
+                            <h4 class="section-title">데이터 추출 필드</h4>
+                            <p class="text-muted mb-4">
+                                OCR 결과에서 추출할 필드를 정의합니다. 각 필드는 이름, 유형, 컨텍스트(키워드), 정규식 패턴을 포함합니다.
+                            </p>
+                            
+                            <div class="editor-container" id="fields-editor"></div>
+                            <input type="hidden" name="fields" id="fields-input">
+                            
+                            <div class="alert alert-info">
+                                <h5 class="alert-heading"><i class="fas fa-info-circle"></i> 필드 설정 안내</h5>
+                                <ul class="mb-0">
+                                    <li><strong>name</strong>: 필드 이름 (고유한 식별자, 예: invoice_number)</li>
+                                    <li><strong>type</strong>: 필드 유형 (text, date, amount, company, person, address, phone, email, number)</li>
+                                    <li><strong>context</strong>: 필드 주변에 나타나는 키워드 (여러 개인 경우 | 로 구분, 예: 청구서 번호|請求書番号)</li>
+                                    <li><strong>regex</strong>: 필드 값에 대한 정규식 패턴 (선택적, 예: 날짜 패턴)</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- OCR 엔진 설정 탭 -->
+                        <div class="tab-pane fade" id="ocr" role="tabpanel">
+                            <h4 class="section-title">OCR 엔진 설정</h4>
+                            <p class="text-muted mb-4">
+                                사용할 OCR 엔진을 선택하고 가중치를 조정하여 인식 정확도를 최적화합니다.
+                            </p>
+                            
+                            <div class="row g-3 mb-4">
+                                <!-- 커스텀 모델 (TrOCR) -->
+                                <div class="col-md-6">
+                                    <div class="card h-100 engine-card {% if not ocr_settings.use_custom_model %}disabled{% endif %}">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h5 class="mb-0">커스텀 모델 (TrOCR)</h5>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       id="use_custom_model" name="use_custom_model" 
+                                                       {% if ocr_settings.use_custom_model %}checked{% endif %}
+                                                       onchange="toggleEngineCard(this)">
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <p>딥러닝 기반 OCR 모델로 일본어 문서에 최적화되어 있습니다.</p>
+                                            <div class="mb-3">
+                                                <label class="form-label">가중치: <span id="custom_model_weight">50</span>%</label>
+                                                <input type="range" class="form-range" min="0" max="100" step="5" 
+                                                       id="custom_model_weight_range" value="50"
+                                                       oninput="updateWeight('custom_model')">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Tesseract OCR -->
+                                <div class="col-md-6">
+                                    <div class="card h-100 engine-card {% if not ocr_settings.use_tesseract %}disabled{% endif %}">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h5 class="mb-0">Tesseract OCR</h5>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       id="use_tesseract" name="use_tesseract" 
+                                                       {% if ocr_settings.use_tesseract %}checked{% endif %}
+                                                       onchange="toggleEngineCard(this)">
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <p>오픈소스 OCR 엔진으로 다양한 언어를 지원합니다.</p>
+                                            <div class="mb-3">
+                                                <label class="form-label">가중치: <span id="tesseract_weight">20</span>%</label>
+                                                <input type="range" class="form-range" min="0" max="100" step="5" 
+                                                       id="tesseract_weight_range" value="20"
+                                                       oninput="updateWeight('tesseract')">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Google Cloud Vision -->
+                                <div class="col-md-6">
+                                    <div class="card h-100 engine-card {% if not ocr_settings.use_google_vision %}disabled{% endif %}">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h5 class="mb-0">Google Cloud Vision</h5>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       id="use_google_vision" name="use_google_vision" 
+                                                       {% if ocr_settings.use_google_vision %}checked{% endif %}
+                                                       onchange="toggleEngineCard(this)">
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <p>Google의 클라우드 OCR API로 높은 정확도를 제공합니다.</p>
+                                            <div class="mb-3">
+                                                <label class="form-label">가중치: <span id="google_vision_weight">20</span>%</label>
+                                                <input type="range" class="form-range" min="0" max="100" step="5" 
+                                                       id="google_vision_weight_range" value="20"
+                                                       oninput="updateWeight('google_vision')">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Azure Form Recognizer -->
+                                <div class="col-md-6">
+                                    <div class="card h-100 engine-card {% if not ocr_settings.use_azure_form %}disabled{% endif %}">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h5 class="mb-0">Azure Form Recognizer</h5>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       id="use_azure_form" name="use_azure_form" 
+                                                       {% if ocr_settings.use_azure_form %}checked{% endif %}
+                                                       onchange="toggleEngineCard(this)">
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <p>Microsoft의 양식 인식 API로 구조화된 문서 처리에 최적화되어 있습니다.</p>
+                                            <div class="mb-3">
+                                                <label class="form-label">가중치: <span id="azure_form_weight">10</span>%</label>
+                                                <input type="range" class="form-range" min="0" max="100" step="5" 
+                                                       id="azure_form_weight_range" value="10"
+                                                       oninput="updateWeight('azure_form')">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <h5 class="mb-3">OCR 신뢰도 설정</h5>
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    <label for="confidence_threshold" class="form-label">신뢰도 임계값</label>
+                                    <div class="d-flex align-items-center">
+                                        <input type="range" class="form-range me-2" min="0.5" max="1.0" step="0.05" 
+                                               id="confidence_threshold" name="confidence_threshold" 
+                                               value="{{ ocr_settings.confidence_threshold }}"
+                                               oninput="updateConfidenceThreshold()">
+                                        <span id="confidence_threshold_value" class="form-range-value">
+                                            {{ ocr_settings.confidence_threshold }}
+                                        </span>
+                                    </div>
+                                    <div class="form-text">
+                                        OCR 엔진 결과를 수용할 최소 신뢰도입니다. 낮은 값은 더 많은 텍스트를 인식하지만 오류 가능성이 높아집니다.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 처리 옵션 탭 -->
+                        <div class="tab-pane fade" id="processing" role="tabpanel">
+                            <h4 class="section-title">특수 항목 감지</h4>
+                            <p class="text-muted mb-4">
+                                문서 내 특수 항목 감지 기능을 설정합니다.
+                            </p>
+                            
+                            <div class="mb-4">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" 
+                                           id="detect_stamps" name="detect_stamps" 
+                                           {% if ocr_settings.detect_stamps %}checked{% endif %}>
+                                    <label class="form-check-label" for="detect_stamps">
+                                        <i class="fas fa-stamp me-2"></i> 도장 감지
+                                    </label>
+                                    <div class="form-text">일본 비즈니스 문서의 도장을 자동으로 감지합니다.</div>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" 
+                                           id="detect_handwriting" name="detect_handwriting" 
+                                           {% if ocr_settings.detect_handwriting %}checked{% endif %}>
+                                    <label class="form-check-label" for="detect_handwriting">
+                                        <i class="fas fa-pen-nib me-2"></i> 손글씨 감지
+                                    </label>
+                                    <div class="form-text">문서 내 손글씨 영역을 자동으로 감지합니다.</div>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" 
+                                           id="detect_strikethrough" name="detect_strikethrough" 
+                                           {% if ocr_settings.detect_strikethrough %}checked{% endif %}>
+                                    <label class="form-check-label" for="detect_strikethrough">
+                                        <i class="fas fa-strikethrough me-2"></i> 취소선 감지
+                                    </label>
+                                    <div class="form-text">문서 내 취소선이 그어진 텍스트를 감지합니다.</div>
+                                </div>
+                            </div>
+                            
+                            <h4 class="section-title">언어 설정</h4>
+                            <p class="text-muted mb-4">
+                                지원하는 언어를 선택합니다.
+                            </p>
+                            
+                            <div class="row mb-4">
+                                {% for lang_code, lang_name in languages.items() %}
+                                <div class="col-md-4 mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               id="lang_{{ lang_code }}" name="languages[]" 
+                                               value="{{ lang_code }}" checked disabled>
+                                        <label class="form-check-label" for="lang_{{ lang_code }}">
+                                            {{ lang_name }} ({{ lang_code }})
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                        <button type="button" class="btn btn-outline-secondary me-md-2" onclick="resetToDefault()">
+                            <i class="fas fa-undo"></i> 기본값으로 재설정
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> 설정 저장
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/9.10.0/jsoneditor.min.js"></script>
+<script>
+    // JSON 에디터 초기화
+    let fieldsEditor;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // 필드 데이터
+        const fieldsData = {{ fields|tojson }};
+        
+        // JSON 에디터 생성
+        const container = document.getElementById('fields-editor');
+        const options = {
+            mode: 'tree',
+            mainMenuBar: false,
+            navigationBar: false,
+            statusBar: false,
+            onChangeJSON: function(json) {
+                document.getElementById('fields-input').value = JSON.stringify(json);
+            }
+        };
+        
+        fieldsEditor = new JSONEditor(container, options, fieldsData);
+        
+        // 필드 값 초기화
+        document.getElementById('fields-input').value = JSON.stringify(fieldsData);
+        
+        // 가중치 초기화
+        updateWeight('custom_model');
+        updateWeight('tesseract');
+        updateWeight('google_vision');
+        updateWeight('azure_form');
+        
+        // 신뢰도 임계값 초기화
+        updateConfidenceThreshold();
+    });
+    
+    // 엔진 카드 토글
+    function toggleEngineCard(checkbox) {
+        const card = checkbox.closest('.engine-card');
+        if (checkbox.checked) {
+            card.classList.remove('disabled');
+        } else {
+            card.classList.add('disabled');
+        }
+    }
+    
+    // 가중치 업데이트
+    function updateWeight(engine) {
+        const range = document.getElementById(`${engine}_weight_range`);
+        const value = document.getElementById(`${engine}_weight`);
+        value.textContent = range.value;
+    }
+    
+    // 신뢰도 임계값 업데이트
+    function updateConfidenceThreshold() {
+        const range = document.getElementById('confidence_threshold');
+        const value = document.getElementById('confidence_threshold_value');
+        value.textContent = range.value;
+    }
+    
+    // 기본값으로 재설정
+    function resetToDefault() {
+        if (confirm('모든 설정을 기본값으로 재설정하시겠습니까?')) {
+            // 필드 기본값
+            const defaultFields = [
+                {
+                    "name": "invoice_number",
+                    "type": "text",
+                    "context": "청구서 번호|請求書番号|インボイス番号|No.|番号",
+                    "regex": "(\\d{1,3}[\\-\\.]\\d{1,3}[\\-\\.]\\d{1,5})"
+                },
+                {
+                    "name": "date",
+                    "type": "date",
+                    "context": "날짜|発行日|日付|date",
+                    "regex": "(\\d{4}[-/年\\.]{1,2}\\d{1,2}[-/月\\.]{1,2}\\d{1,2}[日]?)"
+                },
+                {
+                    "name": "total_amount",
+                    "type": "amount",
+                    "context": "총액|合計|総額|total",
+                    "regex": "([¥￥]?\\s*[\\d,\\.]+\\s*[円]?)"
+                },
+                {
+                    "name": "company_name",
+                    "type": "company",
+                    "context": "회사명|会社名|企業名|company"
+                },
+                {
+                    "name": "tax_amount",
+                    "type": "amount",
+                    "context": "세금|税額|消費税|tax",
+                    "regex": "([¥￥]?\\s*[\\d,\\.]+\\s*[円]?)"
+                }
+            ];
+            
+            // 에디터 업데이트
+            fieldsEditor.set(defaultFields);
+            document.getElementById('fields-input').value = JSON.stringify(defaultFields);
+            
+            // 체크박스 재설정
+            document.getElementById('use_custom_model').checked = true;
+            document.getElementById('use_tesseract').checked = true;
+            document.getElementById('use_google_vision').checked = false;
+            document.getElementById('use_azure_form').checked = false;
+            
+            // 가중치 재설정
+            document.getElementById('custom_model_weight_range').value = 50;
+            document.getElementById('tesseract_weight_range').value = 20;
+            document.getElementById('google_vision_weight_range').value = 20;
+            document.getElementById('azure_form_weight_range').value = 10;
+            
+            // 특수 항목 감지 재설정
+            document.getElementById('detect_stamps').checked = true;
+            document.getElementById('detect_handwriting').checked = true;
+            document.getElementById('detect_strikethrough').checked = true;
+            
+            // 신뢰도 임계값 재설정
+            document.getElementById('confidence_threshold').value = 0.85;
+            
+            // UI 업데이트
+            updateWeight('custom_model');
+            updateWeight('tesseract');
+            updateWeight('google_vision');
+            updateWeight('azure_form');
+            updateConfidenceThreshold();
+            
+            // 엔진 카드 업데이트
+            document.querySelectorAll('.engine-card').forEach(card => {
+                const checkbox = card.querySelector('input[type="checkbox"]');
+                if (checkbox.checked) {
+                    card.classList.remove('disabled');
+                } else {
+                    card.classList.add('disabled');
+                }
+            });
+        }
+    }
+</script>
+{% endblock %}
