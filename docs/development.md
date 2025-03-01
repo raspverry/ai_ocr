@@ -2,242 +2,441 @@
 
 ## 목차
 - [소개](#소개)
+- [시스템 아키텍처](#시스템-아키텍처)
 - [개발 환경 설정](#개발-환경-설정)
-- [프로젝트 구조](#프로젝트-구조)
-- [코딩 표준](#코딩-표준)
-- [Git 워크플로우](#git-워크플로우)
-- [테스트](#테스트)
-- [문서화](#문서화)
-- [배포 준비](#배포-준비)
+- [코드 구조](#코드-구조)
+- [주요 모듈 및 클래스](#주요-모듈-및-클래스)
+- [OCR 엔진 앙상블 메커니즘](#ocr-엔진-앙상블-메커니즘)
+- [LLM 기반 데이터 추출](#llm-기반-데이터-추출)
+- [작업 큐 및 비동기 처리](#작업-큐-및-비동기-처리)
+- [스토리지 관리](#스토리지-관리)
+- [웹 인터페이스](#웹-인터페이스)
+- [API 참조](#api-참조)
+- [단위 테스트](#단위-테스트)
+- [문제 해결 및 디버깅](#문제-해결-및-디버깅)
+- [기여 가이드라인](#기여-가이드라인)
 
 ## 소개
-이 개발 가이드는 팀 멤버들이 프로젝트 개발 환경을 설정하고, 코딩 표준을 이해하며, 효과적으로 협업할 수 있도록 도와줍니다.
+
+초고정밀 멀티랭귀지 OCR 시스템은 다양한 OCR 엔진을 앙상블하여 99.5% 이상의 정확도를 제공하는 문서 인식 및 데이터 추출 시스템입니다. 이 개발 가이드는 시스템의 구조, 주요 컴포넌트, 확장 방법을 설명합니다.
+
+### 핵심 기능
+
+- 다국어 지원: 일본어, 한국어, 영어, 중국어(간체/번체)
+- PDF 자동 방향 보정: 기울어지거나 회전된 페이지 자동 감지 및 보정
+- 고정확도 OCR: 여러 OCR 엔진 앙상블로 최고 수준 정확도 제공
+- 특수 항목 인식: 도장, 손글씨, 취소선 등 인식
+- LLM 기반 데이터 추출: 설정 가능한 필드 자동 추출
+- CSV 내보내기: 추출된 데이터를 CSV로 저장
+- 웹 인터페이스: 직관적인 웹 UI로 문서 관리 및 추출 결과 검토
+
+## 시스템 아키텍처
+
+시스템은 다음과 같은 주요 컴포넌트로 구성됩니다:
+
+1. **FastAPI 웹 서버**: RESTful API 및 웹 인터페이스 제공
+2. **OCR 엔진 앙상블**: 다양한 OCR 엔진의 결과를 조합하여 최고의 정확도 달성
+3. **Redis 작업 큐**: 비동기 작업 처리 및 분산 처리
+4. **스토리지 관리**: 로컬 또는 클라우드 스토리지를 통한 문서 및 결과 관리
+5. **LLM 프로세서**: 대형 언어 모델을 활용한 고급 데이터 추출
+6. **모니터링 시스템**: 시스템 성능 및 오류 모니터링
+
+각 컴포넌트는 모듈화되어 있으며, 독립적으로 확장 가능합니다.
 
 ## 개발 환경 설정
 
-### 필수 소프트웨어
-- Node.js (v18.x 이상)
-- npm (v9.x 이상) 또는 yarn (v1.22.x 이상)
-- Git (v2.30.x 이상)
-- Docker Desktop (v20.10.x 이상)
-- IDE: VS Code (권장) 또는 WebStorm
+### 요구 사항
+- Python 3.8+
+- Redis 6.0+
+- Docker 및 Docker Compose (권장)
+- 최소 8GB RAM
+- (선택) NVIDIA GPU with CUDA 11.0+
 
-### VS Code 권장 확장 프로그램
-- ESLint
-- Prettier
-- Docker
-- GitLens
-- EditorConfig for VS Code
+### 로컬 개발 환경 설정
 
-### 로컬 환경 구성
-
-1. 저장소 복제
+1. 저장소 클론
 ```bash
-git clone https://github.com/your-organization/your-project.git
-cd your-project
+git clone https://github.com/yourusername/precision-ocr-system.git
+cd precision-ocr-system
 ```
 
-2. 의존성 설치
+2. 가상 환경 생성 및 활성화
 ```bash
-npm install
-# 또는
-yarn install
+python -m venv venv
+source venv/bin/activate  # Linux/macOS
+venv\Scripts\activate     # Windows
 ```
 
-3. 환경 변수 설정
+3. 의존성 설치
 ```bash
-cp .env.example .env.local
-# .env.local 파일을 열고 필요한 환경 변수를 설정하세요
+pip install -r requirements.txt
 ```
 
-4. 개발 서버 실행
+4. 환경 변수 설정
 ```bash
-npm run dev
-# 또는
-yarn dev
+cp .env.example .env
+# .env 파일을 편집하여 API 키 및 구성 설정
 ```
 
-5. 로컬 데이터베이스 설정 (Docker 사용)
+5. OCR 모델 다운로드
 ```bash
-docker-compose -f docker-compose.dev.yml up -d
+python -m scripts.download_models
 ```
 
-## 프로젝트 구조
-
-```
-├── src/                  # 소스 코드
-│   ├── api/              # API 엔드포인트
-│   ├── components/       # UI 컴포넌트
-│   ├── config/           # 구성 파일
-│   ├── hooks/            # 커스텀 훅
-│   ├── models/           # 데이터 모델
-│   ├── pages/            # 페이지 컴포넌트
-│   ├── services/         # 서비스 레이어
-│   ├── styles/           # 글로벌 스타일
-│   ├── utils/            # 유틸리티 함수
-│   └── App.js            # 루트 컴포넌트
-├── public/               # 정적 파일
-├── tests/                # 테스트 파일
-├── docs/                 # 문서
-├── .eslintrc.js          # ESLint 설정
-├── .prettierrc           # Prettier 설정
-├── jest.config.js        # Jest 설정
-├── package.json          # 프로젝트 메타데이터
-├── README.md             # 프로젝트 소개
-└── docker-compose.yml    # Docker Compose 설정
-```
-
-## 코딩 표준
-
-### JavaScript/TypeScript 표준
-- ES6+ 문법 사용
-- 명시적인 타입 선언 (TypeScript)
-- 함수형 프로그래밍 패턴 권장
-- 비동기 코드에는 async/await 사용
-
-### 코드 포맷팅
-- 들여쓰기: 2 또는 4 스페이스
-- 세미콜론: 사용
-- 문자열: 작은따옴표 사용
-- 최대 줄 길이: 100자
-
-### 네이밍 컨벤션
-- 변수 및 함수: camelCase
-- 클래스: PascalCase
-- 상수: UPPER_SNAKE_CASE
-- 컴포넌트 파일: PascalCase.jsx 또는 PascalCase.tsx
-- 유틸리티 파일: camelCase.js 또는 camelCase.ts
-
-### 컴포넌트 설계
-- 재사용 가능한 컴포넌트 작성
-- Prop 타입 검증 (PropTypes 또는 TypeScript 인터페이스)
-- 관심사 분리 원칙 준수
-- 상태 관리는 필요한 최상위 레벨에서만 수행
-
-## Git 워크플로우
-
-### 브랜치 전략
-- `main`: 프로덕션 코드
-- `develop`: 개발 중인 코드
-- `feature/*`: 새로운 기능 개발
-- `bugfix/*`: 버그 수정
-- `hotfix/*`: 긴급 프로덕션 수정
-
-### 커밋 메시지 규칙
-```
-<타입>(<범위>): <제목>
-
-<본문>
-
-<푸터>
-```
-
-타입:
-- `feat`: 새로운 기능
-- `fix`: 버그 수정
-- `docs`: 문서 변경
-- `style`: 코드 포맷팅, 세미콜론 누락 등
-- `refactor`: 코드 리팩토링
-- `test`: 테스트 추가 또는 수정
-- `chore`: 빌드 프로세스, 도구 변경 등
-
-예시:
-```
-feat(auth): 사용자 로그인 기능 구현
-
-- OAuth2 인증 추가
-- 로그인 상태 유지 기능 구현
-- 세션 관리 로직 개선
-
-Closes #123
-```
-
-### Pull Request (PR) 프로세스
-1. 기능 브랜치 생성 및 작업
-2. 테스트 작성 및 통과 확인
-3. PR 생성 및 설명 작성
-4. 코드 리뷰 요청
-5. 피드백 수정
-6. 승인 후 머지
-
-## 테스트
-
-### 테스트 유형
-- 단위 테스트: 개별 함수 및 컴포넌트 테스트
-- 통합 테스트: 여러 컴포넌트 또는 서비스 간의 상호작용 테스트
-- E2E 테스트: 사용자 시나리오를 시뮬레이션하는 테스트
-
-### 테스트 실행
+6. Redis 서버 실행
 ```bash
-# 모든 테스트 실행
-npm test
-
-# 특정 테스트 파일 실행
-npm test -- path/to/test.js
-
-# 테스트 커버리지 보고서 생성
-npm test -- --coverage
+redis-server
 ```
 
-### 테스트 작성 가이드라인
-- 각 기능마다 최소 하나의 테스트 작성
-- 테스트 이름은 명확하게 작성 (`it should...`)
-- 테스트 간에 상태가 공유되지 않도록 설계
-- Mocking을 통한 의존성 격리
+7. 개발 서버 실행
+```bash
+# 터미널 1: API 서버 실행
+python main.py
 
-## 문서화
+# 터미널 2: 작업 큐 작업자 실행
+python -m src.worker.start
+```
 
-### 코드 문서화
-- JSDoc 스타일 주석 사용
-- 복잡한 함수는 입/출력 파라미터 및 예외 사항 문서화
-- 핵심 비즈니스 로직에 주석 추가
+### Docker를 사용한 개발
 
-예시:
-```javascript
-/**
- * 사용자 인증을 처리합니다.
- * @param {string} username - 사용자 아이디
- * @param {string} password - 사용자 비밀번호
- * @returns {Promise<Object>} 인증된 사용자 정보와 토큰
- * @throws {AuthError} 인증 실패 시 발생
- */
-async function authenticateUser(username, password) {
-  // 로직...
+Docker를 사용하여 개발 환경을 설정할 수도 있습니다:
+
+```bash
+# 이미지 빌드
+docker-compose build
+
+# 서비스 실행
+docker-compose up -d
+
+# 로그 확인
+docker-compose logs -f
+```
+
+## 코드 구조
+
+프로젝트는 다음과 같은 디렉토리 구조를 따릅니다:
+
+```
+ocr-service/
+├── src/                   # 소스 코드
+│   ├── api/               # API 관련 코드
+│   ├── core/              # 핵심 기능 및 설정
+│   ├── ocr/               # OCR 엔진 및 처리
+│   ├── document/          # 문서 처리
+│   ├── extraction/        # LLM 기반 데이터 추출
+│   ├── storage/           # 스토리지 관리
+│   ├── utils/             # 유틸리티 함수
+│   ├── web/               # 웹 UI
+│   └── worker/            # 백그라운드 작업자
+├── models/                # OCR 모델 저장소
+├── configs/               # 설정 파일
+├── scripts/               # 유틸리티 스크립트
+├── docker/                # Docker 구성
+├── tests/                 # 테스트 코드
+├── .env.example           # 환경 변수 예시
+├── requirements.txt       # Python 패키지
+├── docker-compose.yml     # Docker Compose 설정
+├── Dockerfile             # Dockerfile
+└── main.py                # 애플리케이션 진입점
+```
+
+## 주요 모듈 및 클래스
+
+### 1. OCR 관련 모듈
+- `src/ocr/engines/`: 다양한 OCR 엔진 구현
+- `src/ocr/ensemble.py`: OCR 엔진 앙상블 관리
+- `src/ocr/preprocessor.py`: 이미지 전처리
+- `src/ocr/postprocessor.py`: OCR 결과 후처리
+- `src/ocr/special_handlers.py`: 도장, 손글씨 등 특수 항목 처리
+
+### 2. 문서 처리 모듈
+- `src/document/pdf_processor.py`: PDF 파일 처리
+- `src/document/orientation.py`: 문서 방향 감지 및 보정
+
+### 3. 데이터 추출 모듈
+- `src/extraction/llm_processor.py`: LLM 기반 데이터 추출
+- `src/extraction/field_config.py`: 추출 필드 구성 관리
+- `src/extraction/csv_exporter.py`: 추출 데이터 CSV 내보내기
+
+### 4. 코어 모듈
+- `src/core/config.py`: 애플리케이션 설정 관리
+- `src/core/logging.py`: 로깅 구성
+
+### 5. 작업자 모듈
+- `src/worker/tasks.py`: 백그라운드 작업 정의
+- `src/worker/start.py`: 작업자 프로세스 시작
+
+### 6. API 및 웹 모듈
+- `src/api/routes.py`: API 엔드포인트
+- `src/web/routes.py`: 웹 UI 엔드포인트
+
+## OCR 엔진 앙상블 메커니즘
+
+OCR 엔진 앙상블은 여러 OCR 엔진의 결과를 조합하여 정확도를 높이는 핵심 기능입니다.
+
+### 앙상블 작동 방식
+
+```python
+# src/ocr/ensemble.py의 _ensemble_results 메서드 참조
+def _ensemble_results(self, engine_results, lang):
+    # 언어 결정 (투표 방식)
+    detected_languages = [result['language'] for result in engine_results]
+    
+    # 가중치 기반 텍스트 선택
+    weighted_texts = []
+    for engine_name, result in engine_results.items():
+        confidence = result.get('confidence', 0.0)
+        engine_weight = self.weights.get(engine_name, 0.0)
+        
+        if confidence >= self.confidence_threshold:
+            weighted_score = confidence * engine_weight
+            weighted_texts.append((result['text'], weighted_score))
+    
+    # 가장 높은 가중치 점수를 가진 텍스트 선택
+    final_text = weighted_texts[0][0] if weighted_texts else ""
+```
+
+### 새 OCR 엔진 추가하기
+
+새 OCR 엔진을 앙상블에 추가하려면:
+
+1. `src/ocr/engines/` 디렉토리에 새 엔진 클래스 생성
+2. `BaseOCREngine` 클래스 상속 및 `recognize` 메서드 구현
+3. `src/ocr/engines/__init__.py`에 엔진 등록
+4. 설정에서 새 엔진 활성화 및 가중치 설정
+
+## LLM 기반 데이터 추출
+
+LLM 프로세서는 OCR 결과에서 구조화된 필드 데이터를 추출합니다.
+
+### 주요 기능
+
+- 프롬프트 엔지니어링으로 효과적인 데이터 추출
+- 다양한 필드 유형 지원 (텍스트, 날짜, 금액, 회사명 등)
+- 여러 LLM 공급자 지원 (OpenAI, Anthropic)
+
+### 필드 구성 예시
+
+```json
+{
+  "name": "invoice_number",
+  "type": "text",
+  "context": "청구서 번호|請求書番号|インボイス番号|No.|番号",
+  "regex": "(\\d{1,3}[\\-\\.]\\d{1,3}[\\-\\.]\\d{1,5})"
 }
 ```
 
-### API 문서화
-- OpenAPI (Swagger) 명세 사용
-- 각 엔드포인트별 요청/응답 형식 문서화
-- 인증 요구사항 명시
+### LLM 공급자 추가하기
 
-## 배포 준비
+새 LLM 공급자를 추가하려면:
 
-### 빌드 프로세스
-```bash
-# 프로덕션 빌드
-npm run build
+1. `src/extraction/llm_processor.py`에 새 공급자 메서드 추가
+2. `_call_llm` 메서드에서 공급자 처리 추가
+3. 환경 변수 및 설정 업데이트
 
-# 빌드 산출물 확인
-ls -la dist/
+## 작업 큐 및 비동기 처리
+
+작업 큐는 Redis와 RQ(Redis Queue)를 사용하여 구현되며, 장시간 실행되는 작업의 비동기 처리를 지원합니다.
+
+### 작업 정의 및 등록
+
+```python
+# 작업 정의 예시
+def process_document(file_bytes, file_name, options):
+    # 비동기 래퍼
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        result = loop.run_until_complete(
+            process_document_async(file_bytes, file_name, options)
+        )
+        return result
+    finally:
+        loop.close()
+
+# 작업 등록 (API 라우트에서)
+job = queue.enqueue(
+    process_document,
+    args=(file_bytes, file.filename, options),
+    job_timeout=3600  # 1시간 타임아웃
+)
 ```
 
-### 코드 품질 검사
-```bash
-# 린트 검사
-npm run lint
+### 작업자 관리
 
-# 타입 검사 (TypeScript)
-npm run type-check
+작업자 프로세스는 `src/worker/start.py`에서 관리됩니다. 여러 작업자 프로세스를 병렬로 실행할 수 있습니다:
+
+```bash
+# 4개의 작업자 프로세스 시작
+OCR_MAX_WORKERS=4 python -m src.worker.start
 ```
 
-### 성능 최적화
-- 번들 크기 분석
-- 지연 로딩 구현
-- 이미지 최적화
-- 캐싱 전략 설정
+## 스토리지 관리
+
+스토리지 관리자는 파일 저장, 검색, 삭제를 처리하며 여러 백엔드(로컬, S3, GCS)를 지원합니다.
+
+### 스토리지 백엔드 사용
+
+```python
+# 스토리지 관리자 초기화
+storage_manager = StorageManager()
+
+# 파일 저장
+file_path = await storage_manager.save_file(file_bytes, file_name)
+
+# 파일 검색
+content = await storage_manager.get_file(file_path)
+
+# 파일 삭제
+success = await storage_manager.delete_file(file_path)
+```
+
+### 새 스토리지 백엔드 추가하기
+
+새 스토리지 백엔드를 추가하려면:
+
+1. `src/storage/manager.py`에 새 백엔드 메서드 추가
+2. `_initialize_storage` 메서드에서 백엔드 초기화 추가
+3. 각 동작(저장, 검색, 삭제)에 대한 백엔드별 구현 추가
+
+## 웹 인터페이스
+
+웹 인터페이스는 FastAPI, Jinja2 템플릿, Bootstrap으로 구현됩니다.
+
+### 주요 페이지
+- 홈: `/`
+- 업로드: `/upload`
+- 문서 목록: `/documents`
+- 결과 보기: `/result/{task_id}`
+- 데이터 추출: `/extraction/{task_id}`
+- 설정: `/settings`
+
+### 템플릿 구조
+- `src/web/templates/layout.html`: 기본 레이아웃
+- `src/web/templates/*.html`: 개별 페이지 템플릿
+
+### 정적 자산
+- `src/web/static/css/`: CSS 파일
+- `src/web/static/js/`: JavaScript 파일
+- `src/web/static/images/`: 이미지 파일
+
+## API 참조
+
+RESTful API는 JSON 응답을 제공하며 다음과 같은 주요 엔드포인트를 포함합니다:
+
+### OCR 관련 엔드포인트
+- `POST /api/v1/ocr`: 문서 업로드 및 OCR 처리
+- `GET /api/v1/ocr/{task_id}`: OCR 작업 결과 조회
+
+### 데이터 추출 엔드포인트
+- `POST /api/v1/extraction/{task_id}`: OCR 결과에서 데이터 추출
+- `GET /api/v1/extraction/{task_id}`: 추출 작업 결과 조회
+- `GET /api/v1/extraction/{task_id}/csv`: 추출 데이터를 CSV로 내보내기
+
+### 설정 엔드포인트
+- `GET /api/v1/fields`: 추출 필드 설정 조회
+- `POST /api/v1/fields`: 추출 필드 설정 업데이트
+
+### 상태 확인 엔드포인트
+- `GET /api/v1/health`: 시스템 상태 확인
+- `GET /api/v1/languages`: 지원 언어 목록 조회
+
+## 단위 테스트
+
+단위 테스트는 `tests/` 디렉토리에 있으며 pytest로 실행됩니다:
+
+```bash
+# 모든 테스트 실행
+pytest
+
+# 특정 모듈 테스트
+pytest tests/test_ocr.py
+
+# 커버리지 보고서 생성
+pytest --cov=src tests/
+```
+
+### 테스트 구조
+- `tests/test_api.py`: API 엔드포인트 테스트
+- `tests/test_ocr.py`: OCR 엔진 및 앙상블 테스트
+- `tests/test_extraction.py`: 데이터 추출 테스트
+
+## 문제 해결 및 디버깅
+
+### 로깅
+
+시스템은 구조화된 로깅을 사용하며, 다음과 같이 관리됩니다:
+
+```python
+# 로거 가져오기
+logger = logging.getLogger(__name__)
+
+# 다양한 로그 레벨
+logger.debug("디버그 메시지")
+logger.info("정보 메시지")
+logger.warning("경고 메시지")
+logger.error("오류 메시지", exc_info=True)  # 예외 스택 트레이스 포함
+```
+
+로그 파일은 `logs/` 디렉토리에 저장됩니다.
+
+### 디버그 모드
+
+디버그 모드를 활성화하려면:
+
+```bash
+# 환경 변수 설정
+OCR_DEBUG=True
+
+# 또는 .env 파일에서 설정
+# OCR_DEBUG=True
+```
+
+디버그 모드에서는:
+- 상세 로깅 활성화
+- OCR 엔진별 결과 포함
+- LLM 원본 응답 포함
+
+### 일반적인 문제 해결
+
+1. **OCR 인식 오류**
+   - 이미지 전처리 매개변수 조정
+   - 앙상블 가중치 조정
+   - 언어 코드 명시적 지정
+
+2. **Redis 연결 오류**
+   - Redis 서버 실행 중인지 확인
+   - 연결 URL 확인 (`OCR_REDIS_URL` 환경 변수)
+
+3. **LLM API 오류**
+   - API 키 확인
+   - 프롬프트 길이 확인
+   - 응답 형식 확인
+
+## 기여 가이드라인
+
+### 개발 워크플로
+1. 이슈 생성 또는 기존 이슈 할당
+2. 새 브랜치 생성 (`git checkout -b feature/my-feature`)
+3. 코드 작성 및 테스트
+4. 커밋 및 푸시 (`git push origin feature/my-feature`)
+5. 풀 리퀘스트 생성
+
+### 코드 스타일
+- PEP 8 스타일 가이드 준수
+- 명확한 함수 및 변수 이름 사용
+- 적절한 주석 및 문서화 유지
+
+### 테스트
+- 모든 새 기능에 대한 단위 테스트 작성
+- 기존 테스트가 통과하는지 확인
+- 적절한 코드 커버리지 유지
+
+### 코드 리뷰
+- 모든 풀 리퀘스트는 최소 1명의 리뷰어가 승인해야 함
+- 코드 품질, 성능, 보안에 중점을 둔 리뷰
+- 건설적인 피드백 제공
 
 ---
 
-문서 버전: 1.0.0  
-최종 업데이트: 2025-03-01
+이 개발 가이드는 초고정밀 멀티랭귀지 OCR 시스템의 개발에 대한 종합적인 개요를 제공합니다. 추가 질문이나 문제점은 GitHub 이슈를 통해 문의해 주세요.
