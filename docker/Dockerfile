@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.12-slim
 
 # 타임존 설정
 ENV TZ=Asia/Tokyo
@@ -23,6 +23,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     curl \
     git \
+    xz-utils \
+    file \
+    sudo \
     poppler-utils \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
