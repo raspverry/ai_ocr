@@ -31,8 +31,8 @@
 
 ```bash
 # 1. リポジトリのクローン
-git clone https://github.com/yourusername/precision-ocr-system.git
-cd precision-ocr-system
+git clone https://github.com/yourusername/ai_ocr.git
+cd ai_ocr
 
 # 2. 環境変数の設定
 cp .env.example .env
@@ -76,8 +76,8 @@ cd ..
 
 ```bash
 # リポジトリのクローン
-git clone https://github.com/yourusername/precision-ocr-system.git
-cd precision-ocr-system
+git clone https://github.com/raspverry/ai_ocr.git
+cd ai_ocr
 
 # 仮想環境の作成（オプション）
 python3 -m venv venv
