@@ -21,7 +21,7 @@
 
 ## システム要件
 
-- Python 3.8+
+- Python 3.11+
 - Redis 6.0+
 - Docker および Docker Compose（推奨）
 - 最低 8GB RAM
