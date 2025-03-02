@@ -1,52 +1,53 @@
+```svg
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 620">
-  <!-- 배경 -->
+  <!-- 背景 -->
   <rect width="1000" height="620" fill="#f8f9fa" />
   
-  <!-- 제목 -->
-  <text x="500" y="40" font-family="Arial" font-size="24" font-weight="bold" text-anchor="middle" fill="#333">초고정밀 멀티랭귀지 OCR 시스템 아키텍처</text>
+  <!-- タイトル -->
+  <text x="500" y="40" font-family="Arial" font-size="24" font-weight="bold" text-anchor="middle" fill="#333">超高精度マルチランゲージOCRシステムアーキテクチャ</text>
   
-  <!-- 사용자 인터페이스 섹션 -->
+  <!-- ユーザーインターフェースセクション -->
   <rect x="100" y="80" width="800" height="80" rx="5" ry="5" fill="#e3f2fd" stroke="#2196f3" stroke-width="2" />
-  <text x="500" y="110" font-family="Arial" font-size="18" font-weight="bold" text-anchor="middle" fill="#0d47a1">사용자 인터페이스</text>
+  <text x="500" y="110" font-family="Arial" font-size="18" font-weight="bold" text-anchor="middle" fill="#0d47a1">ユーザーインターフェース</text>
   
   <rect x="150" y="125" width="150" height="25" rx="3" ry="3" fill="#bbdefb" stroke="#1976d2" stroke-width="1" />
-  <text x="225" y="142" font-family="Arial" font-size="14" text-anchor="middle">웹 UI</text>
+  <text x="225" y="142" font-family="Arial" font-size="14" text-anchor="middle">ウェブUI</text>
   
   <rect x="350" y="125" width="150" height="25" rx="3" ry="3" fill="#bbdefb" stroke="#1976d2" stroke-width="1" />
   <text x="425" y="142" font-family="Arial" font-size="14" text-anchor="middle">RESTful API</text>
   
   <rect x="550" y="125" width="150" height="25" rx="3" ry="3" fill="#bbdefb" stroke="#1976d2" stroke-width="1" />
-  <text x="625" y="142" font-family="Arial" font-size="14" text-anchor="middle">파일 업로드/처리</text>
+  <text x="625" y="142" font-family="Arial" font-size="14" text-anchor="middle">ファイルアップロード/処理</text>
   
   <rect x="750" y="125" width="100" height="25" rx="3" ry="3" fill="#bbdefb" stroke="#1976d2" stroke-width="1" />
-  <text x="800" y="142" font-family="Arial" font-size="14" text-anchor="middle">CSV 내보내기</text>
+  <text x="800" y="142" font-family="Arial" font-size="14" text-anchor="middle">CSV出力</text>
   
-  <!-- 코어 처리 파이프라인 -->
+  <!-- コア処理パイプライン -->
   <rect x="100" y="180" width="800" height="250" rx="5" ry="5" fill="#e8f5e9" stroke="#4caf50" stroke-width="2" />
-  <text x="500" y="210" font-family="Arial" font-size="18" font-weight="bold" text-anchor="middle" fill="#1b5e20">코어 처리 파이프라인</text>
+  <text x="500" y="210" font-family="Arial" font-size="18" font-weight="bold" text-anchor="middle" fill="#1b5e20">コア処理パイプライン</text>
   
-  <!-- 문서 처리 모듈 -->
+  <!-- 文書処理モジュール -->
   <rect x="150" y="230" width="220" height="180" rx="3" ry="3" fill="#c8e6c9" stroke="#388e3c" stroke-width="1" />
-  <text x="260" y="250" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="#1b5e20">문서 처리</text>
+  <text x="260" y="250" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="#1b5e20">文書処理</text>
   
   <rect x="170" y="265" width="180" height="25" rx="3" ry="3" fill="#a5d6a7" stroke="#388e3c" stroke-width="1" />
-  <text x="260" y="282" font-family="Arial" font-size="12" text-anchor="middle">PDF 변환 및 분할</text>
+  <text x="260" y="282" font-family="Arial" font-size="12" text-anchor="middle">PDF変換および分割</text>
   
   <rect x="170" y="300" width="180" height="25" rx="3" ry="3" fill="#a5d6a7" stroke="#388e3c" stroke-width="1" />
-  <text x="260" y="317" font-family="Arial" font-size="12" text-anchor="middle">페이지 방향 감지 및 보정</text>
+  <text x="260" y="317" font-family="Arial" font-size="12" text-anchor="middle">ページ方向検出および補正</text>
   
   <rect x="170" y="335" width="180" height="25" rx="3" ry="3" fill="#a5d6a7" stroke="#388e3c" stroke-width="1" />
-  <text x="260" y="352" font-family="Arial" font-size="12" text-anchor="middle">이미지 전처리</text>
+  <text x="260" y="352" font-family="Arial" font-size="12" text-anchor="middle">画像前処理</text>
   
   <rect x="170" y="370" width="180" height="25" rx="3" ry="3" fill="#a5d6a7" stroke="#388e3c" stroke-width="1" />
-  <text x="260" y="387" font-family="Arial" font-size="12" text-anchor="middle">특수 항목 감지 (도장, 손글씨)</text>
+  <text x="260" y="387" font-family="Arial" font-size="12" text-anchor="middle">特殊項目検出（印鑑、手書き）</text>
   
-  <!-- OCR 엔진 모듈 -->
+  <!-- OCRエンジンモジュール -->
   <rect x="390" y="230" width="220" height="180" rx="3" ry="3" fill="#c8e6c9" stroke="#388e3c" stroke-width="1" />
-  <text x="500" y="250" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="#1b5e20">OCR 엔진</text>
+  <text x="500" y="250" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="#1b5e20">OCRエンジン</text>
   
   <rect x="410" y="265" width="180" height="25" rx="3" ry="3" fill="#a5d6a7" stroke="#388e3c" stroke-width="1" />
-  <text x="500" y="282" font-family="Arial" font-size="12" text-anchor="middle">커스텀 딥러닝 OCR (TrOCR)</text>
+  <text x="500" y="282" font-family="Arial" font-size="12" text-anchor="middle">カスタムディープラーニングOCR (TrOCR)</text>
   
   <rect x="410" y="300" width="180" height="25" rx="3" ry="3" fill="#a5d6a7" stroke="#388e3c" stroke-width="1" />
   <text x="500" y="317" font-family="Arial" font-size="12" text-anchor="middle">Tesseract OCR</text>
@@ -57,53 +58,53 @@
   <rect x="410" y="370" width="180" height="25" rx="3" ry="3" fill="#a5d6a7" stroke="#388e3c" stroke-width="1" />
   <text x="500" y="387" font-family="Arial" font-size="12" text-anchor="middle">Azure Form Recognizer</text>
   
-  <!-- 데이터 추출 모듈 -->
+  <!-- データ抽出モジュール -->
   <rect x="630" y="230" width="220" height="180" rx="3" ry="3" fill="#c8e6c9" stroke="#388e3c" stroke-width="1" />
-  <text x="740" y="250" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="#1b5e20">데이터 추출 및 처리</text>
+  <text x="740" y="250" font-family="Arial" font-size="16" font-weight="bold" text-anchor="middle" fill="#1b5e20">データ抽出および処理</text>
   
   <rect x="650" y="265" width="180" height="25" rx="3" ry="3" fill="#a5d6a7" stroke="#388e3c" stroke-width="1" />
-  <text x="740" y="282" font-family="Arial" font-size="12" text-anchor="middle">텍스트 후처리</text>
+  <text x="740" y="282" font-family="Arial" font-size="12" text-anchor="middle">テキスト後処理</text>
   
   <rect x="650" y="300" width="180" height="25" rx="3" ry="3" fill="#a5d6a7" stroke="#388e3c" stroke-width="1" />
-  <text x="740" y="317" font-family="Arial" font-size="12" text-anchor="middle">LLM 기반 필드 추출</text>
+  <text x="740" y="317" font-family="Arial" font-size="12" text-anchor="middle">LLMベースフィールド抽出</text>
   
   <rect x="650" y="335" width="180" height="25" rx="3" ry="3" fill="#a5d6a7" stroke="#388e3c" stroke-width="1" />
-  <text x="740" y="352" font-family="Arial" font-size="12" text-anchor="middle">비즈니스 엔티티 감지</text>
+  <text x="740" y="352" font-family="Arial" font-size="12" text-anchor="middle">ビジネスエンティティ検出</text>
   
   <rect x="650" y="370" width="180" height="25" rx="3" ry="3" fill="#a5d6a7" stroke="#388e3c" stroke-width="1" />
-  <text x="740" y="387" font-family="Arial" font-size="12" text-anchor="middle">CSV 데이터 내보내기</text>
+  <text x="740" y="387" font-family="Arial" font-size="12" text-anchor="middle">CSVデータ出力</text>
   
-  <!-- 커넥션 라인 -->
+  <!-- 接続ライン -->
   <line x1="500" y1="160" x2="500" y2="180" stroke="#333" stroke-width="2" />
   
   <line x1="260" y1="410" x2="260" y2="430" stroke="#333" stroke-width="2" />
   <line x1="500" y1="410" x2="500" y2="430" stroke="#333" stroke-width="2" />
   <line x1="740" y1="410" x2="740" y2="430" stroke="#333" stroke-width="2" />
   
-  <!-- 인프라 레이어 -->
+  <!-- インフラレイヤー -->
   <rect x="100" y="450" width="800" height="120" rx="5" ry="5" fill="#fff3e0" stroke="#ff9800" stroke-width="2" />
-  <text x="500" y="480" font-family="Arial" font-size="18" font-weight="bold" text-anchor="middle" fill="#e65100">인프라 및 스토리지</text>
+  <text x="500" y="480" font-family="Arial" font-size="18" font-weight="bold" text-anchor="middle" fill="#e65100">インフラおよびストレージ</text>
   
   <rect x="150" y="500" width="150" height="50" rx="3" ry="3" fill="#ffe0b2" stroke="#f57c00" stroke-width="1" />
-  <text x="225" y="530" font-family="Arial" font-size="14" text-anchor="middle">Redis 작업 큐</text>
+  <text x="225" y="530" font-family="Arial" font-size="14" text-anchor="middle">Redisワークキュー</text>
   
   <rect x="350" y="500" width="150" height="50" rx="3" ry="3" fill="#ffe0b2" stroke="#f57c00" stroke-width="1" />
-  <text x="425" y="530" font-family="Arial" font-size="14" text-anchor="middle">로컬/S3/GCS 스토리지</text>
+  <text x="425" y="530" font-family="Arial" font-size="14" text-anchor="middle">ローカル/S3/GCSストレージ</text>
   
   <rect x="550" y="500" width="150" height="50" rx="3" ry="3" fill="#ffe0b2" stroke="#f57c00" stroke-width="1" />
-  <text x="625" y="530" font-family="Arial" font-size="14" text-anchor="middle">백그라운드 작업자</text>
+  <text x="625" y="530" font-family="Arial" font-size="14" text-anchor="middle">バックグラウンドワーカー</text>
   
   <rect x="750" y="500" width="150" height="50" rx="3" ry="3" fill="#ffe0b2" stroke="#f57c00" stroke-width="1" />
-  <text x="825" y="530" font-family="Arial" font-size="14" text-anchor="middle">Docker 컨테이너</text>
+  <text x="825" y="530" font-family="Arial" font-size="14" text-anchor="middle">Dockerコンテナ</text>
   
-  <!-- 화살표 및 데이터 흐름 -->
+  <!-- 矢印およびデータフロー -->
   <defs>
     <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
       <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
     </marker>
   </defs>
   
-  <!-- 데이터 흐름 라인 -->
+  <!-- データフローライン -->
   <line x1="260" y1="230" x2="390" y2="270" stroke="#333" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrowhead)" />
   <line x1="370" y1="230" x2="390" y2="330" stroke="#333" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrowhead)" />
   
@@ -112,7 +113,8 @@
   
   <line x1="740" y1="370" x2="740" y2="125" stroke="#333" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrowhead)" />
   
-  <!-- 제목 설명 -->
-  <text x="500" y="585" font-family="Arial" font-size="12" text-anchor="middle" fill="#666">※ 초고정밀 일본 비즈니스용 멀티랭귀지 OCR 시스템 (99.5%+ 정확도)</text>
-  <text x="500" y="605" font-family="Arial" font-size="12" text-anchor="middle" fill="#666">Tesseract, TrOCR, Google Vision, Azure Form Recognizer 앙상블 기술 적용</text>
+  <!-- タイトル説明 -->
+  <text x="500" y="585" font-family="Arial" font-size="12" text-anchor="middle" fill="#666">※ 超高精度日本ビジネス向けマルチランゲージOCRシステム（99.5%+の精度）</text>
+  <text x="500" y="605" font-family="Arial" font-size="12" text-anchor="middle" fill="#666">Tesseract、TrOCR、Google Vision、Azure Form Recognizer アンサンブル技術採用</text>
 </svg>
+```
