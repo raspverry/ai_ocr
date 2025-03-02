@@ -31,7 +31,7 @@
 
 ```bash
 # 1. リポジトリのクローン
-git clone https://github.com/yourusername/ai_ocr.git
+git clone https://github.com/raspverry/ai_ocr.git
 cd ai_ocr
 
 # 2. 環境変数の設定
